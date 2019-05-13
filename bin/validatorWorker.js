@@ -15,7 +15,6 @@ const { argv } = yargs
 	.choices('adapter', Object.keys(adapters))
 	.default('adapter', 'ethereum')
 	.describe('keystoreFile', 'path to JSON Ethereum keystore file')
-	.describe('keystorePwd', 'password to unlock the Ethereum keystore file')
 	.describe('dummyIdentity', 'the identity to use with the dummy adapter')
 	.describe('sentryUrl', 'the URL to the sentry used for listing channels')
 	.default('sentryUrl', 'http://127.0.0.1:8005')
@@ -24,12 +23,17 @@ const { argv } = yargs
 	.demandOption(['adapter', 'sentryUrl'])
 
 const adapter = adapters[argv.adapter]
+const adapterArgs = {
+	dummyIdentity: argv.dummyIdentity,
+	keystoreFile: argv.keystoreFile,
+	keystorePwd: process.env.KEYSTORE_PWD
+}
 
 const tickTimeout = cfg.VALIDATOR_TICK_TIMEOUT || 5000
 
 adapter
-	.init(argv)
-	.then(() => adapter.unlock(argv))
+	.init(adapterArgs)
+	.then(() => adapter.unlock(adapterArgs))
 	.then(function() {
 		if (argv.singleTick) {
 			allChannelsTick().then(() => process.exit(0))
